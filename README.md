@@ -290,6 +290,8 @@ now we will create the two files:
 ```
 now we wait for 2 minutes for the cronjob to do its thing. after two minutes we can find out that the user server-management has been added to the /etc/sudoers file. 
 
+![image8](https://github.com/realatharva15/vulnnet_writeup/blob/main/images/rooted.png)
+
 ```bash
 sudo su
 ```
