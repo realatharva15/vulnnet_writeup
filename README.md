@@ -100,6 +100,8 @@ in the source code, we find the exact version which is 4.0
 
 ![image6](https://github.com/realatharva15/vulnnet_writeup/blob/main/images/Screenshot%202026-01-22%20at%2016-37-04%20http%20__broadcast.vulnnet.thm_signup.php.png)
 
+# Initial Foothold:
+
 lets use searchsploit to get some exploits for this specific version of ClipBucket. 
 
 ```bash
@@ -130,6 +132,8 @@ we will get a message like this:
 {"success":"yes","file_name":"1769093349d8bd5e","extension":"php","file_directory":"CB_BEATS_UPLOAD_DIR"} 
 
 this means that we have successfully uploaded the shell.php file, and we just have to traverse to the /actions/CB_BEATS_UPLOAD_DIR/1769093349d8bd5e.php location in order to trigger the shell.
+
+# Shell as www-data:
 
 ```bash
 #in your browser:
@@ -209,6 +213,8 @@ date
 # Long listing of files in $dest to check file sizes.
 ls -lh $dest
 ```
+# Phase 3 - ROOT access:
+
 we can clearly see that the shell is using the tar command to backup the files present in the /home/server-management/Documents. we can exploit this using tar wildcard injection. after researching on this topic i found out we can execute our own malicious file via the cronjob which will run as root! 
 
 ```bash
