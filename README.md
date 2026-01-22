@@ -44,7 +44,7 @@ lets use zaproxy to automate the scanning process.
 zaproxy
 ```
 
-we will set the target url to http://vulnnet.thm, activvate ajax spider and attack the website. after sometime we find a highly critical vulnerability at the location /index.php?referer
+we will set the target url to http://vulnnet.thm, activate ajax spider and attack the website. after sometime we find a highly critical vulnerability at the location /index.php?referer
 
 ![image1](https://github.com/realatharva15/vulnnet_writeup/blob/main/images/zap.png)
 
@@ -70,9 +70,7 @@ $filter = str_replace('../','',$file);
 include($filter);
 ?>
 ```
-we can easily bypass this security feature by using something like "..//..//..//..//" which i 
-
-now remember we had to find some credentials? i remember that we can possibly access the .htpasswd file we found using gobuster. lets use the same LFI to get the contents of the file. but first we will have to do some google dorking to find the default location of the .htpasswd file
+we can easily bypass this security feature by using something like "..//..//..//..//" which i normally use in an LFI scenario since it would typically bypass most of the sanitization conditions. now remember we had to find some credentials? i remember that we can possibly access the .htpasswd file we found using gobuster. lets use the same LFI to get the contents of the file. but first we will have to do some google dorking to find the default location of the .htpasswd file
 
 ![image3](https://github.com/realatharva15/vulnnet_writeup/blob/main/images/googledorking.png)
 
