@@ -143,7 +143,11 @@ http://broadcast.vulnnet.thm/actions/CB_BEATS_UPLOAD_DIR/1769093349d8bd5e.php
 
 now we can see that we recieve a shell as www-data! lets quickly enumerate the system manually then we will move on with executing linpeas.sh on the system. we find a /etc/crontab running on the system which is owned by root. lets start running linpeas on the target machine.
 
-using linpeas.sh we find an interesting backup file at /var/backups/ssh-backup.tar.gz. lets transfer it to our attacker machine by using a python listner
+using linpeas.sh we find an interesting backup file at /var/backups/ssh-backup.tar.gz. the funny thing was it caught my attention only because all the files in the /var/backups directory were owned by root while the ssh-backup.tar.gz file was owned by server-management. 
+
+![image9](https://github.com/realatharva15/vulnnet_writeup/blob/main/images/backup.png)
+
+lets transfer it to our attacker machine by using a python listner
 
 ```bash
 #on your target machine, setup a listener in the /var/backups directory:
